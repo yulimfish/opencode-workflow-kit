@@ -28,6 +28,7 @@ SKILLS=(
   memory-dream
   swarm-cluster
   post-task-audit
+  execution-economy
   screenshot-to-ui
 )
 
