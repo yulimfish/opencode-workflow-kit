@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# opencode-codex-kit installer — safe, idempotent, one-shot.
+# opencode-workflow-kit installer — safe, idempotent, one-shot.
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-codex-kit/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/main/install.sh | bash
 
 set -euo pipefail
 
@@ -14,9 +14,9 @@ die() { printf "%s\n" "${RED}✗${NC} $*" >&2; exit 1; }
 CFG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
 SKILLS_DIR="$CFG_DIR/skills"
 AGENTS_DIR="$CFG_DIR/agents"
-MANAGED_MANIFEST="$CFG_DIR/.opencode-codex-kit-managed"
-SKILL_MANIFEST="$CFG_DIR/.opencode-codex-kit-skills"
-PLUGIN_MANIFEST="$CFG_DIR/.opencode-codex-kit-plugins"
+MANAGED_MANIFEST="$CFG_DIR/.opencode-workflow-kit-managed"
+SKILL_MANIFEST="$CFG_DIR/.opencode-workflow-kit-skills"
+PLUGIN_MANIFEST="$CFG_DIR/.opencode-workflow-kit-plugins"
 GH_USER="Yulimfish"
 
 SKILLS=(
@@ -41,7 +41,7 @@ AGENT_BUNDLES=(
 MEMORY_EVOLUTION_REPO="https://github.com/Yulimfish/opencode-memory-evolution.git"
 
 PLUGINS=(
-  opencode-codex-guardrails
+  opencode-guardrails
   @yulimfish/opencode-tool-search
 )
 
@@ -151,7 +151,7 @@ Next steps:
 
    {
      "plugin": [
-       "opencode-codex-guardrails",
+       "opencode-guardrails",
        "@yulimfish/opencode-tool-search",
        "opencode-mem"
      ]
@@ -168,11 +168,11 @@ Next steps:
    }
 
 3. Restart opencode. Look for:
-      [codex-guardrails] armed
+      [guardrails] armed
       [opencode-mem] loaded …
 
 4. Optional: create the OpenChamber nightly Dream task from:
    https://github.com/$GH_USER/opencode-memory-evolution/blob/main/examples/openchamber-dream-schedule.json
 
-Full docs: https://github.com/$GH_USER/opencode-codex-kit
+Full docs: https://github.com/$GH_USER/opencode-workflow-kit
 EOF

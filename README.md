@@ -1,6 +1,6 @@
-# opencode-codex-kit
+# opencode-workflow-kit
 
-> 把 [opencode](https://github.com/opencode-ai/opencode) 升级成 **Codex 级别** 的编码 agent：安全、记忆、纪律、UI 预览、工作流巩固 —— 全是可组合的小碎片。
+> 把 [opencode](https://github.com/opencode-ai/opencode) 打造成生产级编码 agent 的 **工作流套件**：安全护栏、语义记忆、工具纪律、集群审计、UI 复刻 —— 全是可组合的小碎片。
 
 一行安装脚本会拉一组精心挑选的插件 + 技能，装完之后你会得到：
 
@@ -21,7 +21,7 @@
 
 | 仓库 | 角色 | 安装 |
 | --- | --- | --- |
-| [`opencode-codex-guardrails`](https://github.com/Yulimfish/opencode-codex-guardrails) | 插件 · 安全 | `npm i opencode-codex-guardrails` |
+| [`opencode-guardrails`](https://github.com/Yulimfish/opencode-guardrails) | 插件 · 安全 | `npm i opencode-guardrails` |
 | [`@yulimfish/opencode-tool-search`](https://github.com/Yulimfish/opencode-tool-search) | 插件 · 动态工具加载 | `npm i @yulimfish/opencode-tool-search` |
 | [`opencode-skill-clarify-before-act`](https://github.com/Yulimfish/opencode-skill-clarify-before-act) | 技能 | git clone |
 | [`opencode-skill-ui-preview-first`](https://github.com/Yulimfish/opencode-skill-ui-preview-first) | 技能 | git clone |
@@ -39,7 +39,7 @@
 ## 一行安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-codex-kit/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/main/install.sh | bash
 ```
 
 脚本会：
@@ -59,7 +59,7 @@ curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-codex-kit/main/i
 
 ```bash
 # 插件
-npm install opencode-codex-guardrails @yulimfish/opencode-tool-search
+npm install opencode-guardrails @yulimfish/opencode-tool-search
 
 # 技能
 mkdir -p ~/.config/opencode/skills
@@ -91,7 +91,7 @@ git clone --depth=1 https://github.com/Yulimfish/opencode-memory-evolution.git /
 ```jsonc
 {
   "plugin": [
-    "opencode-codex-guardrails",
+    "opencode-guardrails",
     "@yulimfish/opencode-tool-search",
     "opencode-mem"
   ]
@@ -113,7 +113,7 @@ git clone --depth=1 https://github.com/Yulimfish/opencode-memory-evolution.git /
 
 ```
 $ opencode
-[codex-guardrails] armed — 9 hard rules, 10 prompt rules, UI hint active
+[guardrails] armed — 9 hard rules, 10 prompt rules, UI hint active
 [opencode-mem] loaded 42 memories, profile v3
 > 你好
 
@@ -138,7 +138,7 @@ Recalled 2 relevant memories （依据 memory mem_… · 2026-07-15）
 ## 卸载
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-codex-kit/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/main/uninstall.sh | bash
 ```
 
 手动卸载不推荐：安装器会记录它实际创建的文件，只删除内容未被修改的自有文件，并保留用户已有或改过的 skill/agent。无论哪种方式，都不会删除 Dream 报告、数据库或备份。

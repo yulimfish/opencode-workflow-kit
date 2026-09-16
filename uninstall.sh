@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# opencode-codex-kit uninstaller
+# opencode-workflow-kit uninstaller
 set -euo pipefail
 
 CFG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
 SKILLS_DIR="$CFG_DIR/skills"
 AGENTS_DIR="$CFG_DIR/agents"
-MANAGED_MANIFEST="$CFG_DIR/.opencode-codex-kit-managed"
-SKILL_MANIFEST="$CFG_DIR/.opencode-codex-kit-skills"
-PLUGIN_MANIFEST="$CFG_DIR/.opencode-codex-kit-plugins"
+MANAGED_MANIFEST="$CFG_DIR/.opencode-workflow-kit-managed"
+SKILL_MANIFEST="$CFG_DIR/.opencode-workflow-kit-skills"
+PLUGIN_MANIFEST="$CFG_DIR/.opencode-workflow-kit-plugins"
 
 path_is_inside_config() {
   local path="$1" base resolved
