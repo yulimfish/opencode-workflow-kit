@@ -39,6 +39,8 @@ AGENT_BUNDLES=(
 
 # Report-only Dream agent, read-only data interface, and review template.
 MEMORY_EVOLUTION_REPO="https://github.com/Yulimfish/opencode-memory-evolution.git"
+MEMORY_PLUGIN_REPO="github:Yulimfish/opencode-mem#yulimfish/v2.19.4-paper-ink"
+MEMORY_PLUGIN_PACKAGE="@yulimfish/opencode-mem"
 
 PLUGINS=(
   opencode-guardrails
@@ -137,7 +139,10 @@ for plugin in "${PLUGINS[@]}"; do
     printf '%s\n' "$plugin" >> "$PLUGIN_MANIFEST"
   fi
 done
-npm install --silent "${PLUGINS[@]}"
+if ! npm ls --depth=0 "$MEMORY_PLUGIN_PACKAGE" >/dev/null 2>&1; then
+  printf '%s\n' "$MEMORY_PLUGIN_PACKAGE" >> "$PLUGIN_MANIFEST"
+fi
+npm install --silent "${PLUGINS[@]}" "$MEMORY_PLUGIN_REPO"
 ok "plugins installed"
 
 # --- next steps ----------------------------------------------------------
@@ -153,7 +158,7 @@ Next steps:
      "plugin": [
        "opencode-guardrails",
        "@yulimfish/opencode-tool-search",
-       "opencode-mem"
+        "./node_modules/@yulimfish/opencode-mem/dist/plugin.js"
      ]
    }
 
