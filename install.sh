@@ -39,7 +39,7 @@ AGENT_BUNDLES=(
 
 # Report-only Dream agent, read-only data interface, and review template.
 MEMORY_EVOLUTION_REPO="https://github.com/Yulimfish/opencode-memory-evolution.git"
-MEMORY_PLUGIN_REPO="github:Yulimfish/opencode-mem#yulimfish/paper-ink"
+MEMORY_PLUGIN_REPO="github:Yulimfish/opencode-mem"
 MEMORY_PLUGIN_PACKAGE="@yulimfish/opencode-mem"
 
 PLUGINS=(
