@@ -79,6 +79,8 @@ At session start, verify BOTH contracts are loaded: global (`~/.config/opencode/
 
 ### 2.8 交付 / 归档 / 发布
 
+- **Issue/PR 关联本会话 (hard)**：本轮确实处理、创建、审查或解决一个 issue/PR 时，知道其 URL 即刻调用 OpenChamber `session.link`（issue 用 `kind:"issue"`，PR/MR 用 `kind:"change"`）；仅在讨论中提及的对象不关联，不推测或伪造 URL。
+- 工具调用成功后，只在本轮正常结果中简要报告一次。没有符合条件的具体对象或没有可用 URL 时，不提这条规则。**禁止用“之后/下次会关联”等未来承诺或复述规则作结束回复，也不得以此替代 `session.link` 调用**；用户提醒时先检查并执行当前遗漏的关联动作，而不是只确认规则。
 - **Git**：暂存、提交、合并/变基、上游同步或需保护隐藏工作区改动时，必须先加载 `personal-git-workflow`。
 - **仓库身份与发布/开源**：初始化仓库、配置/修正提交身份或提交元数据，或触发"整理代码并发布 / 开源发布 / publish it / 发个新包 / 发到 kit 里 / 让别人一键装"时，必须加载 `personal-release-workflow`。
 - **记忆、规划审计、执行经济与工具纪律**：按 §2.1–2.7 所列场景，必须先加载各自的 `personal-*` Skill；不得把“引用了 Skill”当作可选建议。
@@ -123,3 +125,9 @@ At session start, verify BOTH contracts are loaded: global (`~/.config/opencode/
 ### 3.8 浏览器自动化会话 (hard)
 
 使用 `agent-browser`（或同类自动化浏览器）时必须加载 `personal-session-hygiene`；跑完任务**必须关闭会话**，禁止跨天闲置。命令、`doctor` 处置及风险详情见该 Skill。
+
+### 3.9 搜索与检索工具路由
+
+- 任何以搜索/检索为主的任务，先判断目标来源（网页、本地文件、代码库、知识库等），再检查并加载与该来源直接匹配的已安装 skill；不要因具体执行提示词未重提而漏掉适用 skill，也不要强行套用不匹配的 skill。
+- 需要外部网页搜索、跨来源研究或抓取已知网页时，开始检索前必须加载 `tiered-web-search` skill，并遵循其工具边界。
+- 只需取得搜索结果或读取网页内容时禁止使用 Safari MCP；网页使用 `websearch` / `webfetch`，本地文件、代码库和内部知识库使用匹配的专用搜索/读取工具。仅在确需浏览器交互、可视检查或依赖浏览器会话的任务中才使用 Safari MCP。
