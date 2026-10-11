@@ -2,6 +2,8 @@
 
 > 把 [opencode](https://github.com/opencode-ai/opencode) 打造成生产级编码 agent 的 **工作流套件**：安全护栏、语义记忆、工具纪律、集群审计、UI 复刻 —— 全是可组合的小碎片。
 
+个人技能总仓：[opencode-personal-skills](https://github.com/Yulimfish/opencode-personal-skills) 汇总 18 个个人原创 skill 原件，并为 32 个非原创技能提供原始链接；全局 Agent 契约单独存放于 [`AGENTS.md`](./AGENTS.md)。
+
 一行安装脚本会拉一组精心挑选的插件 + 技能，装完之后你会得到：
 
 - 🛡  **Guardrails 护栏** —— 硬拦 `rm -rf /`、fork bomb、`curl \| sh`；对 `git push --force`、`drop database`、`sudo` 弹提示；前端文件上自动带 UI 预览提醒。
@@ -22,6 +24,7 @@
 
 | 仓库 | 角色 | 安装 |
 | --- | --- | --- |
+| [`opencode-personal-skills`](https://github.com/Yulimfish/opencode-personal-skills) | 个人技能总仓 · 18 个原创原件 + 32 个外部来源链接 | 目录 / 按需复制（非安装器来源） |
 | [`opencode-guardrails`](https://github.com/Yulimfish/opencode-guardrails) | 插件 · 安全 | `npm i opencode-guardrails` |
 | [`@yulimfish/opencode-tool-search`](https://github.com/Yulimfish/opencode-tool-search) | 插件 · 动态工具加载 | `npm i @yulimfish/opencode-tool-search` |
 | [`@yulimfish/opencode-mem`](https://github.com/Yulimfish/opencode-mem) | 插件 · Paper & Ink 记忆 fork | git-based npm install |
