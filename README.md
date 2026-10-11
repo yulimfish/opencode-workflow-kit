@@ -16,6 +16,7 @@
 - 🔍 **Post-Task Audit** —— 任务完成后派出零上下文污染的 subagent 独立核查（默认审计员 `goal-verify`），必要时多维度并行开审（功能 / 合规 / 安全 / 意图对齐）。
 - ⚖️ **Execution Economy** —— 按风险分级（Level 1/2/3）决定检查 / 验证 / 审计的强度，平衡安全、效果与速度：最终目标优先、最小充分验证、不重复验证已知事实、窄范围命令即安全、失败驱动复杂度、环境绕过优先、连续执行不打断。
 - 🖼️ **Screenshot-to-UI** —— 给张参考图（截图 / Figma 导出 / 手绘稿 / URL），走 5 阶段流水线（analyze → HTML plan → styled build → visual diff → iterate）做像素级 1:1 复刻。
+- 🗼 **Tower Workflow** —— 独立的模型档位协作流程：总控路由、高能力与轻量 Agent、Spec/Plan/Build/Review 闭环；模型由 OpenChamber 绑定。
 
 ## 内容清单
 
@@ -36,6 +37,7 @@
 | [`opencode-skill-execution-economy`](https://github.com/Yulimfish/opencode-skill-execution-economy) | 技能 · 执行经济 | git clone |
 | [`opencode-skill-screenshot-to-ui`](https://github.com/Yulimfish/opencode-skill-screenshot-to-ui) | 技能 · 1:1 UI 复刻 | git clone |
 | [`opencode-swarm-agents`](https://github.com/Yulimfish/opencode-swarm-agents) | Agent 集 · worker + synth + auditor | git clone → agents/ |
+| [`opencode-tower-workflow`](https://github.com/Yulimfish/opencode-tower-workflow) | Agent 集 · Tower controller + high/light tiers | git clone → agents/ |
 
 ## 一行安装
 
@@ -48,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/mai
 1. 检查前置（git、npm、curl）。
 2. 把 10 个技能 clone 到 `~/.config/opencode/skills/`。
 3. 安装 `opencode-memory-evolution` 的 report-only Dream agent、`dreamctl` 和报告模板（不触碰数据库）。
-4. 把 opencode-swarm-agents clone 出来，把里面的 3 个 agent md 复制到 `~/.config/opencode/agents/`（装完需要重启一次 opencode 让 Task 白名单识别）。
+4. 把 `opencode-swarm-agents` 和 `opencode-tower-workflow` clone 出来，将 agent md 文件复制到 `~/.config/opencode/agents/`（装完需要重启一次 opencode 让 Task 白名单识别）。
 5. 把插件和 `@yulimfish/opencode-mem` fork 安装到 `~/.config/opencode/`。
 6. 打印你需要粘到 `opencode.jsonc` / `opencode-mem.jsonc` 的确切片段。
 
@@ -77,6 +79,11 @@ mkdir -p ~/.config/opencode/agents
 git clone --depth=1 https://github.com/Yulimfish/opencode-swarm-agents.git /tmp/swarm-agents \
   && cp /tmp/swarm-agents/agents/*.md ~/.config/opencode/agents/ \
   && rm -rf /tmp/swarm-agents
+
+# Tower Agent bundle：controller + high/light capability tiers
+git clone --depth=1 https://github.com/Yulimfish/opencode-tower-workflow.git /tmp/opencode-tower-workflow \
+  && cp /tmp/opencode-tower-workflow/agents/*.md ~/.config/opencode/agents/ \
+  && rm -rf /tmp/opencode-tower-workflow
 
 # Memory Evolution：报告-only Dream + 本地只读接口
 git clone --depth=1 https://github.com/Yulimfish/opencode-memory-evolution.git /tmp/opencode-memory-evolution \

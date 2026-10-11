@@ -35,6 +35,7 @@ SKILLS=(
 # Agent bundles: repos that ship one or more subagent md files into $AGENTS_DIR.
 AGENT_BUNDLES=(
   opencode-swarm-agents
+  opencode-tower-workflow
 )
 
 # Report-only Dream agent, read-only data interface, and review template.
