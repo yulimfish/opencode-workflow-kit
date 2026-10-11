@@ -16,8 +16,10 @@ SKILLS_DIR="$CFG_DIR/skills"
 AGENTS_DIR="$CFG_DIR/agents"
 MANAGED_MANIFEST="$CFG_DIR/.opencode-workflow-kit-managed"
 SKILL_MANIFEST="$CFG_DIR/.opencode-workflow-kit-skills"
+SKILL_HASH_MANIFEST="$CFG_DIR/.opencode-workflow-kit-skill-hashes"
 PLUGIN_MANIFEST="$CFG_DIR/.opencode-workflow-kit-plugins"
 GH_USER="Yulimfish"
+SKILL_CATALOG_REPO="https://github.com/Yulimfish/opencode-personal-skills.git"
 
 SKILLS=(
   clarify-before-act
@@ -31,6 +33,241 @@ SKILLS=(
   execution-economy
   screenshot-to-ui
 )
+
+skill_stage=""
+skill_lock=""
+cleanup_skill_sync() {
+  if [[ -n "$skill_stage" ]]; then rm -rf "$skill_stage"; fi
+  if [[ -n "$skill_lock" ]]; then rmdir "$skill_lock" 2>/dev/null || true; fi
+}
+
+manifest_contains_path() {
+  local manifest="$1" wanted="$2"
+  [[ -f "$manifest" ]] && grep -Fqx -- "$wanted" "$manifest"
+}
+
+skill_hash_for_path() {
+  local wanted="$1"
+  [[ -f "$SKILL_HASH_MANIFEST" ]] || return 0
+  awk -F '\t' -v wanted="$wanted" '$1 == wanted { hash = $2 } END { if (hash != "") print hash }' "$SKILL_HASH_MANIFEST"
+}
+
+skill_tree_hash() {
+  local directory="$1" file mode metadata
+  [[ -d "$directory" ]] || return 1
+  (
+    cd "$directory"
+    find . -print | LC_ALL=C sort | while IFS= read -r file; do
+      if [[ -L "$file" ]]; then
+        printf '%s\tsymlink\t%s\n' "$file" "$(readlink "$file")"
+      elif [[ -d "$file" ]]; then
+        if [[ "${OSTYPE:-}" == darwin* ]]; then mode=$(stat -f '%Lp' "$file"); else mode=$(stat -c '%a' "$file"); fi
+        printf '%s\tdir\t%s\n' "$file" "$mode"
+      elif [[ -f "$file" ]]; then
+        if [[ "${OSTYPE:-}" == darwin* ]]; then mode=$(stat -f '%Lp' "$file"); else mode=$(stat -c '%a' "$file"); fi
+        printf '%s\tfile\t%s\t%s\n' "$file" "$mode" "$(shasum -a 256 "$file" | cut -d ' ' -f 1)"
+      else
+        if [[ "${OSTYPE:-}" == darwin* ]]; then metadata=$(stat -f '%HT:%Lp' "$file"); else metadata=$(stat -c '%F:%a' "$file"); fi
+        printf '%s\tspecial\t%s\n' "$file" "$metadata"
+      fi
+    done
+  ) | shasum -a 256 | cut -d ' ' -f 1
+}
+
+move_no_replace() {
+  local source="$1" destination="$2" nested
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
+    mv -n -h "$source" "$destination" || return 1
+  else
+    mv -n -T "$source" "$destination" || return 1
+  fi
+  if [[ -e "$source" || -L "$source" ]]; then return 1; fi
+  if [[ -L "$destination" ]]; then return 0; fi
+  nested="$destination/${source##*/}"
+  if [[ -d "$nested" && ! -L "$nested" ]]; then
+    if [[ "${OSTYPE:-}" == darwin* ]]; then
+      mv -n -h "$nested" "$source" || return 1
+    else
+      mv -n -T "$nested" "$source" || return 1
+    fi
+    return 1
+  fi
+  [[ -e "$destination" || -L "$destination" ]]
+}
+
+legacy_skill_is_clean() {
+  local directory="$1" status upstream ahead
+  status=$(git -C "$directory" status --porcelain --untracked-files=all --ignored=matching 2>/dev/null) || return 1
+  [[ -z "$status" ]] || return 1
+  upstream=$(git -C "$directory" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null) || return 1
+  ahead=$(git -C "$directory" rev-list --count "${upstream}..HEAD" 2>/dev/null) || return 1
+  [[ "$ahead" == "0" ]]
+}
+
+record_skill_copy() {
+  local dest="$1" hash="$2" temp_manifest
+  if ! manifest_contains_path "$SKILL_MANIFEST" "$dest"; then
+    printf '%s\n' "$dest" >> "$SKILL_MANIFEST"
+  fi
+  temp_manifest="$SKILL_HASH_MANIFEST.tmp.$$"
+  if [[ -f "$SKILL_HASH_MANIFEST" ]]; then
+    awk -F '\t' -v path="$dest" '$1 != path { print }' "$SKILL_HASH_MANIFEST" > "$temp_manifest"
+  else
+    : > "$temp_manifest"
+  fi
+  printf '%s\t%s\n' "$dest" "$hash" >> "$temp_manifest"
+  mv "$temp_manifest" "$SKILL_HASH_MANIFEST"
+}
+
+replace_skill_from_catalog() {
+  local skill="$1" expected_kind="$2" expected_hash="$3"
+  local source="$SKILL_CATALOG_DIR/$1" dest="$SKILLS_DIR/$1"
+  local stage backup="" new_hash backup_hash status
+  if ! stage=$(mktemp -d "$SKILLS_DIR/.${skill}.new.XXXXXX"); then
+    return 1
+  fi
+  if [[ -z "$stage" || ! -d "$stage" || -L "$stage" ]]; then return 1; fi
+  case "$stage" in
+    "$SKILLS_DIR/.${skill}.new."*) ;;
+    *) return 1 ;;
+  esac
+  if ! cp -R "$source/." "$stage/"; then
+    rm -rf "$stage"
+    return 1
+  fi
+  new_hash=$(skill_tree_hash "$stage") || {
+    rm -rf "$stage"
+    return 1
+  }
+  if [[ -e "$dest" ]]; then
+    backup="$SKILLS_DIR/.${skill}.old.$$"
+    if [[ "$expected_kind" == "absent" || -e "$backup" || -L "$backup" ]] || ! move_no_replace "$dest" "$backup"; then
+      rm -rf "$stage"
+      return 2
+    fi
+    if [[ -L "$backup" ]]; then
+      status=1
+    else
+      case "$expected_kind" in
+        tree)
+          backup_hash=$(skill_tree_hash "$backup") || backup_hash=""
+          [[ "$backup_hash" == "$expected_hash" ]] || status=1
+          ;;
+        legacy)
+          legacy_skill_is_clean "$backup" || status=1
+          ;;
+        *) status=1 ;;
+      esac
+    fi
+    if [[ "${status:-0}" != "0" ]]; then
+      if [[ ! -e "$dest" && ! -L "$dest" ]]; then
+        move_no_replace "$backup" "$dest" || warn "preserved changed skill at $backup"
+      else
+        warn "preserved changed skill at $backup because another path now exists"
+      fi
+      rm -rf "$stage"
+      return 2
+    fi
+  elif [[ "$expected_kind" != "absent" ]]; then
+    rm -rf "$stage"
+    return 2
+  fi
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    if [[ -n "$backup" ]]; then
+      warn "preserved prior skill at $backup because another path appeared at $dest"
+    fi
+    rm -rf "$stage"
+    return 2
+  fi
+  if ! move_no_replace "$stage" "$dest"; then
+    if [[ -n "$backup" && ! -e "$dest" && ! -L "$dest" ]]; then move_no_replace "$backup" "$dest" || warn "preserved prior skill at $backup"; fi
+    rm -rf "$stage"
+    return 2
+  fi
+  current_hash=$(skill_tree_hash "$dest") || current_hash=""
+  if [[ -L "$dest" || "$current_hash" != "$new_hash" ]]; then
+    warn "preserved concurrently changed skill at $dest"
+    return 2
+  fi
+  if ! record_skill_copy "$dest" "$new_hash"; then
+    warn "installed $skill but failed to record ownership; preserving it at $dest"
+    if [[ -n "$backup" ]]; then warn "preserved prior skill at $backup"; fi
+    return 1
+  fi
+  if [[ -n "$backup" ]]; then
+    case "$expected_kind" in
+      tree)
+        backup_hash=$(skill_tree_hash "$backup") || backup_hash=""
+        if [[ "$backup_hash" != "$expected_hash" ]]; then
+          warn "preserved concurrently changed prior skill at $backup"
+          return 0
+        fi
+        ;;
+      legacy)
+        if ! legacy_skill_is_clean "$backup"; then
+          warn "preserved concurrently changed prior skill at $backup"
+          return 0
+        fi
+        ;;
+    esac
+    rm -rf "$backup"
+  fi
+}
+
+install_catalog_skill() {
+  local skill="$1" dest="$SKILLS_DIR/$1" stored_hash current_hash status
+  if [[ -L "$dest" ]]; then
+    warn "$dest is a symlink — preserving the existing link and target"
+    return
+  fi
+  if [[ ! -e "$dest" && ! -L "$dest" ]]; then
+    if replace_skill_from_catalog "$skill" absent ""; then
+      ok "$skill (installed from personal skill catalog)"
+    else
+      status=$?
+      [[ "$status" == "2" ]] && warn "$dest appeared during install — preserving it" || die "failed to install skill: $skill"
+    fi
+    return
+  fi
+
+  if manifest_contains_path "$SKILL_MANIFEST" "$dest" && [[ -e "$dest/.git" ]]; then
+    if ! legacy_skill_is_clean "$dest"; then
+      warn "$dest has local changes or commits — preserving the legacy checkout"
+      return
+    fi
+    say "migrating clean managed skill: $skill"
+    if replace_skill_from_catalog "$skill" legacy ""; then
+      ok "$skill (migrated to personal skill catalog)"
+    else
+      status=$?
+      [[ "$status" == "2" ]] && warn "$dest changed during migration — preserving it" || die "failed to migrate skill: $skill"
+    fi
+    return
+  fi
+
+  stored_hash=$(skill_hash_for_path "$dest")
+  if [[ -n "$stored_hash" ]]; then
+    current_hash=$(skill_tree_hash "$dest") || current_hash=""
+    if [[ "$current_hash" != "$stored_hash" ]]; then
+      warn "$dest differs from the last managed copy — preserving local changes"
+      return
+    fi
+    say "updating unchanged managed skill: $skill"
+    if replace_skill_from_catalog "$skill" tree "$stored_hash"; then
+      ok "$skill (updated from personal skill catalog)"
+    else
+      status=$?
+      [[ "$status" == "2" ]] && warn "$dest changed during update — preserving it" || die "failed to update skill: $skill"
+    fi
+    return
+  fi
+
+  if manifest_contains_path "$SKILL_MANIFEST" "$dest"; then
+    warn "$dest is a legacy manifest entry without a verifiable catalog fingerprint — preserving it"
+  else
+    warn "$dest is not managed by this installer — preserving it"
+  fi
+}
 
 # Agent bundles: repos that ship one or more subagent md files into $AGENTS_DIR.
 AGENT_BUNDLES=(
@@ -54,6 +291,20 @@ command -v git  >/dev/null || die "git not found. Install git first."
 command -v npm  >/dev/null || die "npm not found. Install Node.js (>=18) first."
 command -v curl >/dev/null || die "curl not found."
 
+# Fetch and validate the complete source before modifying installed skills or manifests.
+trap cleanup_skill_sync EXIT
+if ! skill_stage=$(mktemp -d); then
+  die "failed to create temporary catalog staging directory"
+fi
+[[ -n "$skill_stage" && -d "$skill_stage" && ! -L "$skill_stage" ]] || die "invalid catalog staging directory"
+SKILL_CATALOG_DIR="$skill_stage/catalog"
+if ! git clone --depth=1 --quiet "$SKILL_CATALOG_REPO" "$SKILL_CATALOG_DIR"; then
+  die "failed to fetch personal skill catalog"
+fi
+for s in "${SKILLS[@]}"; do
+  [[ -f "$SKILL_CATALOG_DIR/$s/SKILL.md" ]] || die "catalog is missing $s/SKILL.md"
+done
+
 install_managed() {
   local source="$1" target="$2"
   if [[ -e "$target" ]]; then
@@ -73,32 +324,19 @@ install_managed() {
 # --- dirs ----------------------------------------------------------------
 say "preparing $CFG_DIR"
 mkdir -p "$SKILLS_DIR" "$AGENTS_DIR"
+if ! mkdir "$CFG_DIR/.opencode-workflow-kit-skill-operation.lock" 2>/dev/null; then
+  die "another workflow-kit install or uninstall is operating on skills"
+fi
+skill_lock="$CFG_DIR/.opencode-workflow-kit-skill-operation.lock"
 touch "$MANAGED_MANIFEST" "$SKILL_MANIFEST" "$PLUGIN_MANIFEST"
 ok "config dir ready"
 
 # --- skills --------------------------------------------------------------
 for s in "${SKILLS[@]}"; do
-  dest="$SKILLS_DIR/$s"
-  repo="https://github.com/$GH_USER/opencode-skill-$s.git"
-  if [[ -d "$dest/.git" ]]; then
-    say "updating skill: $s"
-    if git -C "$dest" pull --ff-only --quiet; then
-      ok "$s (updated)"
-    else
-      warn "$s pull failed — keeping the local copy; verify it manually"
-    fi
-    continue
-  else
-    say "installing skill: $s"
-    if [[ -e "$dest" ]]; then
-      warn "$dest exists but is not a git checkout — moving to $dest.bak.$(date +%s)"
-      mv "$dest" "$dest.bak.$(date +%s)"
-    fi
-    git clone --depth=1 --quiet "$repo" "$dest"
-    printf '%s\n' "$dest" >> "$SKILL_MANIFEST"
-  fi
-  ok "$s (installed)"
+  install_catalog_skill "$s"
 done
+cleanup_skill_sync
+trap - EXIT
 
 # --- memory evolution -----------------------------------------------------
 tmp=$(mktemp -d)
