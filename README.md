@@ -48,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/mai
 脚本会：
 
 1. 检查前置（git、npm、curl）。
-2. 把 10 个技能 clone 到 `~/.config/opencode/skills/`。
+2. 把 10 个 skill 仓库 clone 到 `~/.config/opencode/skills/`（Agent bundles 单独安装，不计入此数）。
 3. 安装 `opencode-memory-evolution` 的 report-only Dream agent、`dreamctl` 和报告模板（不触碰数据库）。
 4. 把 `opencode-swarm-agents` 和 `opencode-tower-workflow` clone 出来，将 agent md 文件复制到 `~/.config/opencode/agents/`（装完需要重启一次 opencode 让 Task 白名单识别）。
 5. 把插件和 `@yulimfish/opencode-mem` fork 安装到 `~/.config/opencode/`。
