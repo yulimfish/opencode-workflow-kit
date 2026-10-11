@@ -9,7 +9,7 @@
 - 🛡  **Guardrails 护栏** —— 硬拦 `rm -rf /`、fork bomb、`curl \| sh`；对 `git push --force`、`drop database`、`sudo` 弹提示；前端文件上自动带 UI 预览提醒。
 - 🧠 **Memory 记忆** —— 通过 [`@yulimfish/opencode-mem`](https://github.com/Yulimfish/opencode-mem) 提供的语义长时记忆：Paper & Ink WebUI、暂存与证据链、混合注入检索；向量由阿里云百炼 MaaS（`qwen3.7-text-embedding`，1024 维）直接生成。
 - 🎯 **Discipline 纪律** —— 五条硬规则，阻止 agent 在 30 行分片重读、串行化本该并行的调用、shell 工具乱选上浪费轮次。
-- 🔎 **Tool Search 动态工具加载** —— 参考 Kimi K3 的 tool-search 模式；把 MCP 等噪声工具的描述折叠成 stub，模型按需 `tool_search("...")` 揭示，命中的工具本 session 永久可见。省 token、聚焦注意力。
+- 🔎 **Tool Search 动态工具加载（已归档，不启用）** —— 曾参考 Kimi K3 的 tool-search 模式，按需揭示折叠的工具描述；项目停止维护，工作流安装器不再安装。当前优先使用 OpenChamber 内置 Code Mode。
 - 🖼  **UI-preview-first** —— 任何会移动 DOM 的改动前，先给 ASCII wireframe。
 - 🌙 **Memory Dream** —— 睡眠隐喻的碎片巩固：五阶段（Doze → Cluster → Consolidate → NREM 衰减评分 → REM 清理），支持「清理 / 遗忘」快路径。
 - 🧬 **Memory Evolution** —— P0-P2 的报告-only Dream agent、暂存/证据链补丁、混合注入检索与回滚资产；不上传个人记忆数据。
@@ -26,11 +26,11 @@
 | --- | --- | --- |
 | [`opencode-personal-skills`](https://github.com/Yulimfish/opencode-personal-skills) | 个人技能唯一来源 · 18 个原创原件 + 32 个外部来源链接 | 安装器复制精选的 10 个 |
 | [`opencode-guardrails`](https://github.com/Yulimfish/opencode-guardrails) | 插件 · 安全 | `npm i opencode-guardrails` |
-| [`@yulimfish/opencode-tool-search`](https://github.com/Yulimfish/opencode-tool-search) | 插件 · 动态工具加载 | `npm i @yulimfish/opencode-tool-search` |
 | [`@yulimfish/opencode-mem`](https://github.com/Yulimfish/opencode-mem) | 插件 · Paper & Ink 记忆 fork | git-based npm install |
 | [`opencode-memory-evolution`](https://github.com/Yulimfish/opencode-memory-evolution) | 记忆系统进化资产 · Dream / P1 / P2 | git clone |
 | [`opencode-swarm-agents`](https://github.com/Yulimfish/opencode-swarm-agents) | Agent 集 · worker + synth + auditor | git clone → agents/ |
 | [`opencode-tower-workflow`](https://github.com/Yulimfish/opencode-tower-workflow) | Agent 集 · Tower controller + high/light tiers | git clone → agents/ |
+| [`@yulimfish/opencode-tool-search`](https://github.com/Yulimfish/opencode-tool-search) | 插件 · 动态工具加载（已归档） | **不启用** |
 
 ## 一行安装
 
@@ -55,8 +55,7 @@ curl -fsSL https://raw.githubusercontent.com/Yulimfish/opencode-workflow-kit/mai
 
 ```bash
 # 插件（含固定的 Paper & Ink 记忆 fork）
-npm install opencode-guardrails @yulimfish/opencode-tool-search \
-  "github:Yulimfish/opencode-mem"
+npm install opencode-guardrails "github:Yulimfish/opencode-mem"
 
 # 精选个人技能
 mkdir -p ~/.config/opencode/skills
@@ -96,7 +95,6 @@ git clone --depth=1 https://github.com/Yulimfish/opencode-memory-evolution.git /
 {
   "plugin": [
     "opencode-guardrails",
-    "@yulimfish/opencode-tool-search",
     "./node_modules/@yulimfish/opencode-mem/dist/plugin.js"
   ]
 }

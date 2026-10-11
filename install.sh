@@ -282,7 +282,6 @@ MEMORY_PLUGIN_PACKAGE="@yulimfish/opencode-mem"
 
 PLUGINS=(
   opencode-guardrails
-  @yulimfish/opencode-tool-search
 )
 
 # --- prereq --------------------------------------------------------------
@@ -396,8 +395,7 @@ Next steps:
    {
      "plugin": [
        "opencode-guardrails",
-       "@yulimfish/opencode-tool-search",
-        "./node_modules/@yulimfish/opencode-mem/dist/plugin.js"
+       "./node_modules/@yulimfish/opencode-mem/dist/plugin.js"
      ]
    }
 
