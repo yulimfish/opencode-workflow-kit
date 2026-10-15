@@ -63,6 +63,7 @@ At session start, verify BOTH contracts are loaded: global (`~/.config/opencode/
 ### 2.4 执行
 
 - 长任务（≥4 次工具调用或 ≥2 阶段）在有意义的阶段间发一行简短进度，不逐条播报；执行经济及工具纪律遵循 `personal-execution-workflow`。
+- 遇到报错或异常，必须定位并修复根因；禁止吞掉、隐藏或弱化错误，或绕过检查来伪装成功。根因暂时无法解决时，保留并如实报告错误、影响及未解决状态。
 
 ### 2.5 验证 — 最小充分
 
